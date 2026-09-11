@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Login | Brand Crafter</title><style>
+  :root{--navy:#122347;--navy-dark:#0b1730;--gold:#c9a24b;--gold-light:#e8d5a3;--bg:#f7f6f3;--card:#ffffff;--border:#e3e0d8;--text:#1c2333;--muted:#6b7280;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
+  a{color:var(--gold);text-decoration:none;}
+  .site-header{background:var(--navy);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .brand-logo{font-size:20px;font-weight:800;}
+  .brand-logo span{color:var(--gold);}
+  .site-header nav a{color:#dfe3ec;font-size:14px;margin-left:18px;font-weight:600;}
+  .site-header nav a:hover{color:var(--gold);}
+  .wrap{max-width:460px;margin:56px auto;padding:0 20px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 34px rgba(18,35,71,.10);padding:32px;}
+  .card h1{font-size:21px;color:var(--navy);margin:0 0 6px;}
+  .card p.sub{color:var(--muted);font-size:13.5px;margin:0 0 24px;}
+  .field{margin-bottom:16px;}
+  label{display:block;font-weight:600;margin-bottom:6px;font-size:13.5px;color:var(--navy);}
+  input[type="text"],input[type="email"],input[type="tel"],input[type="password"],textarea,select{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:#fbfbfa;}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold);}
+  .btn{width:100%;padding:13px;border:none;border-radius:10px;background:var(--navy);color:#fff;font-size:15px;font-weight:700;cursor:pointer;}
+  .btn:hover{background:var(--navy-dark);}
+  .btn:disabled{opacity:.6;cursor:not-allowed;}
+  .msg{text-align:center;margin-top:14px;font-size:13.5px;font-weight:600;}
+  .success{color:#1e8e3e;}
+  .error{color:#c0392b;}
+  .links{text-align:center;margin-top:18px;font-size:13px;color:var(--muted);}
+  footer{background:var(--navy-dark);color:#aab3c9;text-align:center;padding:20px;font-size:12px;margin-top:40px;}
+</style></head>
+<body>
+<header class="site-header"><div class="brand-logo">BRAND<span>CRAFTER</span></div><nav><a href="index.html">Home</a><a href="login.html">Login</a><a href="register.html">Register</a></nav></header>
+<div class="wrap"><div class="card">
+  <h1>Collaborator Login</h1>
+  <p class="sub">Login with your registered phone number and password.</p>
+  <form id="loginForm">
+    <div class="field"><label>Phone Number *</label><input type="tel" id="loginPhone" pattern="[6-9][0-9]{9}" maxlength="10" required></div>
+    <div class="field"><label>Password *</label><input type="password" id="loginPassword" required></div>
+    <button type="submit" class="btn" id="loginBtn">Login</button>
+    <div id="loginMsg" class="msg"></div>
+  </form>
+  <p class="links"><a href="forgot-password.html">Forgot Password?</a> &nbsp;|&nbsp; <a href="register.html">Create Account</a></p>
+</div></div>
+<footer>Brand Crafter &middot; Belapur, Navi Mumbai, Maharashtra 400614, India</footer>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+</script>
+<script>
+document.getElementById('loginForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const phone = document.getElementById('loginPhone').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const msg = document.getElementById('loginMsg');
+  const btn = document.getElementById('loginBtn');
+  btn.disabled = true; btn.textContent = "Logging in...";
+  try {
+    const phoneDoc = await db.collection('phoneIndex').doc(phone).get();
+    if(!phoneDoc.exists){
+      msg.textContent = "No account found for this phone number."; msg.className = "msg error";
+      btn.disabled = false; btn.textContent = "Login"; return;
+    }
+    const email = phoneDoc.data().email;
+    await auth.signInWithEmailAndPassword(email, password);
+    msg.textContent = "Login successful! Redirecting..."; msg.className = "msg success";
+    setTimeout(() => window.location.href = "payout.html", 1000);
+  } catch(err){
+    msg.textContent = "Incorrect phone number or password."; msg.className = "msg error";
+    btn.disabled = false; btn.textContent = "Login";
+  }
+});
+</script>
+</body></html>

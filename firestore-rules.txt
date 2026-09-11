@@ -1,0 +1,35 @@
+// Paste this in Firebase Console -> Firestore Database -> Rules -> Publish
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /influencers/{uid} {
+      allow read: if request.auth != null;
+      allow create: if request.auth != null && request.auth.uid == uid;
+      allow update: if request.auth != null;
+      allow delete: if false;
+    }
+    match /phoneIndex/{phone} {
+      allow read: if true;
+      allow create: if request.auth != null;
+      allow update, delete: if false;
+    }
+    match /barterEnquiries/{docId} {
+      allow create: if true;
+      allow read, update: if request.auth != null;
+      allow delete: if false;
+    }
+    match /contentSubmissions/{docId} {
+      allow create: if true;
+      allow read, update: if request.auth != null;
+      allow delete: if false;
+    }
+    match /notifications/{docId} {
+      allow create: if request.auth != null;
+      allow read, update: if true;
+      allow delete: if false;
+    }
+    match /passwordResets/{email} {
+      allow read, write: if true;
+    }
+  }
+}
