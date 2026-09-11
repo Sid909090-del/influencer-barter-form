@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin | Brand Crafter</title><style>
+  :root{--navy:#122347;--navy-dark:#0b1730;--gold:#c9a24b;--gold-light:#e8d5a3;--bg:#f7f6f3;--card:#ffffff;--border:#e3e0d8;--text:#1c2333;--muted:#6b7280;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
+  a{color:var(--gold);text-decoration:none;}
+  .site-header{background:var(--navy);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .brand-logo{font-size:20px;font-weight:800;}
+  .brand-logo span{color:var(--gold);}
+  .site-header nav a{color:#dfe3ec;font-size:14px;margin-left:18px;font-weight:600;}
+  .site-header nav a:hover{color:var(--gold);}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 34px rgba(18,35,71,.10);padding:32px;}
+  .card h1{font-size:21px;color:var(--navy);margin:0 0 6px;}
+  .card p.sub{color:var(--muted);font-size:13.5px;margin:0 0 24px;}
+  .field{margin-bottom:16px;}
+  label{display:block;font-weight:600;margin-bottom:6px;font-size:13.5px;color:var(--navy);}
+  input[type="text"],input[type="password"]{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:#fbfbfa;}
+  .btn{width:100%;padding:13px;border:none;border-radius:10px;background:var(--navy);color:#fff;font-size:15px;font-weight:700;cursor:pointer;}
+  .btn:hover{background:var(--navy-dark);}
+  .msg{text-align:center;margin-top:14px;font-size:13.5px;font-weight:600;}
+  .success{color:#1e8e3e;}
+  .error{color:#c0392b;}
+  footer{background:var(--navy-dark);color:#aab3c9;text-align:center;padding:20px;font-size:12px;margin-top:40px;}
+  table{width:100%;border-collapse:collapse;font-size:12.5px;margin-top:14px;}
+  th,td{padding:9px 8px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top;}
+  th{background:#eef0f5;color:var(--navy);}
+  input.inline{width:60px;padding:6px;border:1px solid var(--border);border-radius:6px;}
+  .save-btn,.corr-btn,.send-btn{padding:6px 12px;background:var(--navy);color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:12px;}
+  .save-btn:hover,.corr-btn:hover,.send-btn:hover{background:var(--navy-dark);}
+  .wrap-admin{max-width:1080px;margin:40px auto;padding:0 20px;}
+  .stat-cards{display:flex;gap:14px;margin-bottom:10px;flex-wrap:wrap;}
+  .stat-card{flex:1;min-width:160px;background:#fbfbfa;border:1px solid var(--border);border-radius:10px;padding:14px;text-align:center;}
+  .stat-card .val{font-size:22px;font-weight:800;color:var(--navy);}
+  .stat-card .lbl{font-size:12px;color:var(--muted);}
+  .section-title2{font-size:16px;font-weight:800;color:var(--navy);margin:28px 0 6px;}
+  .corr-box{display:none;margin-top:8px;}
+  .corr-box textarea{width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;font-size:12.5px;}
+  .status-pill{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:700;}
+  .status-pending{background:#eef0f5;color:var(--navy);}
+  .status-correction{background:#fdeeee;color:#a13030;}
+</style></head>
+<body>
+<header class="site-header"><div class="brand-logo">BRAND<span>CRAFTER</span></div><nav><a href="index.html">Home</a><a href="login.html">Login</a></nav></header>
+<div class="wrap-admin"><div class="card">
+  <h1 id="adminTitle">Admin Login</h1>
+  <form id="adminLoginForm">
+    <div class="field"><label>Username *</label><input type="text" id="adminUsername" required></div>
+    <div class="field"><label>Password *</label><input type="password" id="adminPassword" required></div>
+    <button type="submit" class="btn">Login as Admin</button>
+    <div id="adminMsg" class="msg"></div>
+  </form>
+  <div id="adminPanel" style="display:none;">
+    <div class="stat-cards">
+      <div class="stat-card"><div class="val" id="statEnquiries">0</div><div class="lbl">Total Barter Requests</div></div>
+      <div class="stat-card"><div class="val" id="statSubmissions">0</div><div class="lbl">Influencers Who Submitted Videos</div></div>
+      <div class="stat-card"><div class="val" id="statPendingCorrections">0</div><div class="lbl">Pending Corrections</div></div>
+    </div>
+    <div class="section-title2">Barter Enquiries — Who Ordered What</div>
+    <table><thead><tr><th>Name</th><th>Phone</th><th>Brand</th><th>Product</th><th>Date & Time</th></tr></thead><tbody id="enquiryBody"></tbody></table>
+    <div class="section-title2">Content Submissions & Corrections</div>
+    <table><thead><tr><th>Name</th><th>Contact</th><th>Brand</th><th>Video Link</th><th>Delivered</th><th>Submitted At</th><th>Status</th><th>Action</th></tr></thead><tbody id="submissionBody"></tbody></table>
+    <div class="section-title2">Manage Influencer Eligibility & Payout</div>
+    <table><thead><tr><th>Name</th><th>Phone</th><th>Email</th><th>Eligible</th><th>Payout %</th><th>Earnings (₹)</th><th></th></tr></thead><tbody id="influencerBody"></tbody></table>
+  </div>
+</div></div>
+<footer>Brand Crafter &middot; Belapur, Navi Mumbai, Maharashtra 400614, India</footer>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+</script>
+<script>
+document.getElementById('adminLoginForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const username = document.getElementById('adminUsername').value.trim();
+  const password = document.getElementById('adminPassword').value;
+  const msg = document.getElementById('adminMsg');
+  if(username !== ADMIN_USERNAME){
+    msg.textContent = "Not authorized as admin."; msg.className = "msg error"; return;
+  }
+  try {
+    await auth.signInWithEmailAndPassword(ADMIN_EMAIL, password);
+    document.getElementById('adminLoginForm').style.display = 'none';
+    document.getElementById('adminTitle').textContent = 'Admin Dashboard';
+    document.getElementById('adminPanel').style.display = 'block';
+    loadAll();
+  } catch(err){
+    msg.textContent = "Login failed. Check your username/password."; msg.className = "msg error";
+  }
+});
+async function loadAll(){ loadEnquiries(); loadSubmissions(); loadInfluencers(); }
+async function loadEnquiries(){
+  const tbody = document.getElementById('enquiryBody');
+  tbody.innerHTML = '';
+  const snap = await db.collection('barterEnquiries').orderBy('timestamp','desc').get();
+  document.getElementById('statEnquiries').textContent = snap.size;
+  snap.forEach(doc => {
+    const d = doc.data();
+    const row = document.createElement('tr');
+    row.innerHTML = `<td>${d.fullName||''}</td><td>${d.phone||''}</td><td>${d.brand||''}</td><td>${d.products||''}</td><td>${d.timestamp||''}</td>`;
+    tbody.appendChild(row);
+  });
+}
+async function loadSubmissions(){
+  const tbody = document.getElementById('submissionBody');
+  tbody.innerHTML = '';
+  const snap = await db.collection('contentSubmissions').orderBy('timestamp','desc').get();
+  document.getElementById('statSubmissions').textContent = snap.size;
+  let pendingCount = 0;
+  snap.forEach(doc => {
+    const d = doc.data();
+    const status = d.status || 'pending';
+    if(status === 'correction_requested') pendingCount++;
+    const pillClass = status === 'correction_requested' ? 'status-correction' : 'status-pending';
+    const pillText = status === 'correction_requested' ? 'Correction Sent' : 'Pending Review';
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${d.fullName||''}</td><td>${d.contact||''}</td><td>${d.brand||''}</td>
+      <td><a href="${d.videoLink}" target="_blank">View</a></td>
+      <td>${d.deliveryDate||''}</td><td>${d.timestamp||''}</td>
+      <td><span class="status-pill ${pillClass}">${pillText}</span></td>
+      <td>
+        <button class="corr-btn" data-id="${doc.id}">Add Correction</button>
+        <div class="corr-box" id="corrBox_${doc.id}">
+          <textarea rows="2" placeholder="e.g. Show the product label clearly in the first 3 seconds"></textarea>
+          <button class="send-btn" data-id="${doc.id}" data-contact="${d.contact}" data-brand="${d.brand}" style="margin-top:6px;">Send to Influencer</button>
+        </div>
+      </td>`;
+    tbody.appendChild(row);
+  });
+  document.getElementById('statPendingCorrections').textContent = pendingCount;
+  document.querySelectorAll('.corr-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const box = document.getElementById('corrBox_' + btn.dataset.id);
+      box.style.display = box.style.display === 'block' ? 'none' : 'block';
+    });
+  });
+  document.querySelectorAll('.send-btn').forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.id;
+      const box = document.getElementById('corrBox_' + id);
+      const points = box.querySelector('textarea').value.trim();
+      if(!points){ alert('Please enter correction points.'); return; }
+      await db.collection('notifications').add({
+        submissionId: id, contact: btn.dataset.contact, brand: btn.dataset.brand,
+        correctionPoints: points, timestamp: new Date().toLocaleString('en-IN', {timeZone:'Asia/Kolkata'}),
+        influencerTimelineDays: null, acknowledged: false
+      });
+      await db.collection('contentSubmissions').doc(id).update({ status: 'correction_requested' });
+      btn.textContent = 'Sent!';
+      setTimeout(() => loadSubmissions(), 1000);
+    });
+  });
+}
+async function loadInfluencers(){
+  const tbody = document.getElementById('influencerBody');
+  tbody.innerHTML = '';
+  const snap = await db.collection('influencers').get();
+  snap.forEach(doc => {
+    const d = doc.data();
+    const row = document.createElement('tr');
+    row.innerHTML = `
+      <td>${d.fullName}</td><td>${d.phone}</td><td>${d.email}</td>
+      <td><input type="checkbox" class="eligibleBox" ${d.eligible ? 'checked' : ''}></td>
+      <td><input type="text" class="inline payoutInput" value="${d.payoutPercent}"></td>
+      <td><input type="text" class="inline earningsInput" value="${d.totalEarnings}"></td>
+      <td><button class="save-btn" data-id="${doc.id}">Save</button></td>`;
+    tbody.appendChild(row);
+  });
+  document.querySelectorAll('.save-btn').forEach(btn => {
+    btn.addEventListener('click', async function(){
+      const row = btn.closest('tr');
+      const id = btn.dataset.id;
+      const eligible = row.querySelector('.eligibleBox').checked;
+      const payoutPercent = Number(row.querySelector('.payoutInput').value);
+      const totalEarnings = Number(row.querySelector('.earningsInput').value);
+      await db.collection('influencers').doc(id).update({ eligible, payoutPercent, totalEarnings });
+      btn.textContent = "Saved!";
+      setTimeout(() => btn.textContent = "Save", 1200);
+    });
+  });
+}
+</script>
+</body></html>
