@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payout | Brand Crafter</title><style>
+  :root{--navy:#122347;--navy-dark:#0b1730;--gold:#c9a24b;--gold-light:#e8d5a3;--bg:#f7f6f3;--card:#ffffff;--border:#e3e0d8;--text:#1c2333;--muted:#6b7280;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
+  a{color:var(--gold);text-decoration:none;}
+  .site-header{background:var(--navy);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .brand-logo{font-size:20px;font-weight:800;}
+  .brand-logo span{color:var(--gold);}
+  .site-header nav a{color:#dfe3ec;font-size:14px;margin-left:18px;font-weight:600;}
+  .site-header nav a:hover{color:var(--gold);}
+  .wrap{max-width:620px;margin:56px auto;padding:0 20px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 34px rgba(18,35,71,.10);padding:32px;}
+  .card h1{font-size:21px;color:var(--navy);margin:0 0 6px;}
+  .card p.sub{color:var(--muted);font-size:13.5px;margin:0 0 24px;}
+  .stat-row{display:flex;gap:14px;margin-bottom:16px;}
+  .stat-box{flex:1;background:#fbfbfa;border:1px solid var(--border);border-radius:10px;padding:16px;text-align:center;}
+  .stat-box .val{font-size:22px;font-weight:800;color:var(--navy);}
+  .stat-box .lbl{font-size:12px;color:var(--muted);margin-top:4px;}
+  .not-eligible{background:#fdf2e0;border:1px solid var(--gold-light);border-radius:10px;padding:20px;text-align:center;}
+  .not-eligible h2{color:var(--navy);font-size:17px;margin:0 0 8px;}
+  .not-eligible p{color:var(--muted);font-size:13.5px;}
+  .notif-card{background:#fdeeee;border:1px solid #e8b4b4;border-radius:10px;padding:16px;margin-bottom:14px;}
+  .notif-card p{font-size:13.5px;margin:0 0 10px;}
+  .notif-card select{margin-bottom:10px;width:100%;padding:8px;border:1px solid var(--border);border-radius:6px;}
+  .ack-btn{padding:8px 16px;background:var(--navy);color:#fff;border:none;border-radius:8px;cursor:pointer;font-size:13px;font-weight:700;}
+  .ack-btn:hover{background:var(--navy-dark);}
+  .section-title2{font-size:15px;font-weight:800;color:var(--navy);margin:24px 0 10px;}
+  footer{background:var(--navy-dark);color:#aab3c9;text-align:center;padding:20px;font-size:12px;margin-top:40px;}
+</style></head>
+<body>
+<header class="site-header"><div class="brand-logo">BRAND<span>CRAFTER</span></div><nav><a href="index.html">Home</a><a href="payout.html">Payout</a><a href="#" id="logoutLink">Logout</a></nav></header>
+<div class="wrap"><div class="card" id="payoutCard"><p style="text-align:center;color:var(--muted);">Loading your dashboard...</p></div></div>
+<footer>Brand Crafter &middot; Belapur, Navi Mumbai, Maharashtra 400614, India</footer>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+</script>
+<script>
+let currentUser = null;
+let currentData = null;
+auth.onAuthStateChanged(async function(user){
+  const card = document.getElementById('payoutCard');
+  if(!user){ window.location.href = "login.html"; return; }
+  currentUser = user;
+  const doc = await db.collection('influencers').doc(user.uid).get();
+  if(!doc.exists){ card.innerHTML = "<p>Profile not found.</p>"; return; }
+  currentData = doc.data();
+  renderDashboard();
+});
+async function renderDashboard(){
+  const card = document.getElementById('payoutCard');
+  const d = currentData;
+  let statusHtml = "";
+  if(!d.eligible){
+    statusHtml = `
+      <div class="not-eligible">
+        <h2>You are not eligible yet</h2>
+        <p>Focus on your content quality and audience reach. Once your video reach and orders generated meet our benchmark, you'll automatically become eligible for percentage-based paid collaborations.</p>
+        <p style="margin-top:10px;">You may also refer other influencers (with their own followers) to apply for separate collaborations — we're happy to welcome them too.</p>
+      </div>`;
+  } else {
+    statusHtml = `
+      <h1>Welcome, ${d.fullName}</h1>
+      <p class="sub">Here's your current payout status.</p>
+      <div class="stat-row">
+        <div class="stat-box"><div class="val">${d.payoutPercent}%</div><div class="lbl">Payout Rate</div></div>
+        <div class="stat-box"><div class="val">\u20b9${d.totalEarnings}</div><div class="lbl">Total Earnings</div></div>
+      </div>`;
+  }
+  const notifSnap = await db.collection('notifications').where('contact','in',[d.phone, d.email]).where('acknowledged','==', false).get();
+  let notifHtml = "";
+  if(!notifSnap.empty){
+    notifHtml = `<div class="section-title2">Content Correction Requests</div>`;
+    notifSnap.forEach(doc => {
+      const n = doc.data();
+      notifHtml += `
+        <div class="notif-card">
+          <p><b>${n.brand}:</b> ${n.correctionPoints}</p>
+          <label style="font-weight:600;font-size:13px;">Your timeline to complete this change (max 3 days):</label>
+          <select id="timeline_${doc.id}">
+            <option value="1">1 day</option>
+            <option value="2">2 days</option>
+            <option value="3" selected>3 days</option>
+          </select>
+          <button class="ack-btn" data-id="${doc.id}">Confirm Timeline</button>
+        </div>`;
+    });
+  }
+  card.innerHTML = statusHtml + notifHtml + `<p style="font-size:13px;color:var(--muted);margin-top:16px;">Earnings and eligibility are reviewed and updated by our management team.</p>`;
+  document.querySelectorAll('.ack-btn').forEach(btn => {
+    btn.addEventListener('click', async function(){
+      const id = btn.dataset.id;
+      const days = document.getElementById('timeline_' + id).value;
+      await db.collection('notifications').doc(id).update({ influencerTimelineDays: Number(days), acknowledged: true });
+      btn.textContent = "Confirmed!";
+      setTimeout(() => renderDashboard(), 1000);
+    });
+  });
+}
+document.getElementById('logoutLink').addEventListener('click', function(e){
+  e.preventDefault();
+  auth.signOut().then(() => window.location.href = "login.html");
+});
+</script>
+</body></html>
