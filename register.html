@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Register | Brand Crafter</title><style>
+  :root{--navy:#122347;--navy-dark:#0b1730;--gold:#c9a24b;--gold-light:#e8d5a3;--bg:#f7f6f3;--card:#ffffff;--border:#e3e0d8;--text:#1c2333;--muted:#6b7280;}
+  *{box-sizing:border-box;}
+  body{margin:0;font-family:'Segoe UI',Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.5;}
+  a{color:var(--gold);text-decoration:none;}
+  .site-header{background:var(--navy);color:#fff;padding:16px 28px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+  .brand-logo{font-size:20px;font-weight:800;}
+  .brand-logo span{color:var(--gold);}
+  .site-header nav a{color:#dfe3ec;font-size:14px;margin-left:18px;font-weight:600;}
+  .site-header nav a:hover{color:var(--gold);}
+  .wrap{max-width:460px;margin:56px auto;padding:0 20px;}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:16px;box-shadow:0 10px 34px rgba(18,35,71,.10);padding:32px;}
+  .card h1{font-size:21px;color:var(--navy);margin:0 0 6px;}
+  .card p.sub{color:var(--muted);font-size:13.5px;margin:0 0 24px;}
+  .field{margin-bottom:16px;}
+  label{display:block;font-weight:600;margin-bottom:6px;font-size:13.5px;color:var(--navy);}
+  input[type="text"],input[type="email"],input[type="tel"],input[type="password"],textarea,select{width:100%;padding:11px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px;background:#fbfbfa;}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--gold);}
+  .btn{width:100%;padding:13px;border:none;border-radius:10px;background:var(--navy);color:#fff;font-size:15px;font-weight:700;cursor:pointer;}
+  .btn:hover{background:var(--navy-dark);}
+  .btn:disabled{opacity:.6;cursor:not-allowed;}
+  .msg{text-align:center;margin-top:14px;font-size:13.5px;font-weight:600;}
+  .success{color:#1e8e3e;}
+  .error{color:#c0392b;}
+  .links{text-align:center;margin-top:18px;font-size:13px;color:var(--muted);}
+  footer{background:var(--navy-dark);color:#aab3c9;text-align:center;padding:20px;font-size:12px;margin-top:40px;}
+</style></head>
+<body>
+<header class="site-header"><div class="brand-logo">BRAND<span>CRAFTER</span></div><nav><a href="index.html">Home</a><a href="login.html">Login</a><a href="register.html">Register</a></nav></header>
+<div class="wrap"><div class="card">
+  <h1>Create Your Collaborator Account</h1>
+  <p class="sub">Register with your phone, email and a password. You'll receive a verification OTP on your registered email.</p>
+  <form id="registerForm">
+    <div class="field"><label>Full Name *</label><input type="text" id="regName" required></div>
+    <div class="field"><label>Phone Number *</label><input type="tel" id="regPhone" pattern="[6-9][0-9]{9}" maxlength="10" placeholder="10-digit mobile number" required></div>
+    <div class="field"><label>Email Address *</label><input type="email" id="regEmail" required></div>
+    <div class="field"><label>Password (min 6 characters) *</label><input type="password" id="regPassword" minlength="6" required></div>
+    <button type="submit" class="btn" id="regBtn">Send Email OTP & Register</button>
+    <div id="regMsg" class="msg"></div>
+  </form>
+  <form id="otpForm" style="display:none;margin-top:18px;">
+    <div class="field"><label>Enter Email OTP *</label><input type="text" id="otpInput" maxlength="6" required></div>
+    <button type="submit" class="btn" id="otpBtn">Verify & Complete Registration</button>
+    <div id="otpMsg" class="msg"></div>
+  </form>
+  <p class="links">Already registered? <a href="login.html">Login here</a></p>
+</div></div>
+<footer>Brand Crafter &middot; Belapur, Navi Mumbai, Maharashtra 400614, India</footer>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="firebase-config.js"></script>
+<script>
+  firebase.initializeApp(firebaseConfig);
+  const auth = firebase.auth();
+  const db = firebase.firestore();
+</script>
+<script>
+let pendingUser = null;
+let generatedOtp = null;
+document.getElementById('registerForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const name = document.getElementById('regName').value.trim();
+  const phone = document.getElementById('regPhone').value.trim();
+  const email = document.getElementById('regEmail').value.trim();
+  const password = document.getElementById('regPassword').value;
+  const msg = document.getElementById('regMsg');
+  const btn = document.getElementById('regBtn');
+  if(!/^[6-9][0-9]{9}$/.test(phone)){ msg.textContent="Enter a valid 10-digit phone number."; msg.className="msg error"; return; }
+  btn.disabled = true; btn.textContent = "Sending OTP...";
+  try {
+    const phoneDoc = await db.collection('phoneIndex').doc(phone).get();
+    if(phoneDoc.exists){
+      msg.textContent = "This phone number is already registered. Please login instead.";
+      msg.className = "msg error";
+      btn.disabled = false; btn.textContent = "Send Email OTP & Register";
+      return;
+    }
+    generatedOtp = Math.floor(100000 + Math.random()*900000).toString();
+    pendingUser = {name, phone, email, password};
+    await fetch(APPS_SCRIPT_URL, { method:"POST", body: JSON.stringify({action:"sendOtp", email:email, otp:generatedOtp}), headers:{"Content-Type":"text/plain;charset=utf-8"} });
+    document.getElementById('registerForm').style.display = 'none';
+    document.getElementById('otpForm').style.display = 'block';
+    msg.textContent = "OTP sent to your email!"; msg.className = "msg success";
+    btn.disabled = false; btn.textContent = "Send Email OTP & Register";
+  } catch(err){
+    msg.textContent = "Error: " + err.message; msg.className = "msg error";
+    btn.disabled = false; btn.textContent = "Send Email OTP & Register";
+  }
+});
+document.getElementById('otpForm').addEventListener('submit', async function(e){
+  e.preventDefault();
+  const entered = document.getElementById('otpInput').value.trim();
+  const msg = document.getElementById('otpMsg');
+  const btn = document.getElementById('otpBtn');
+  if(entered !== generatedOtp){
+    msg.textContent = "Incorrect OTP. Please try again.";
+    msg.className = "msg error";
+    return;
+  }
+  btn.disabled = true; btn.textContent = "Creating account...";
+  try {
+    const cred = await auth.createUserWithEmailAndPassword(pendingUser.email, pendingUser.password);
+    const uid = cred.user.uid;
+    await db.collection('phoneIndex').doc(pendingUser.phone).set({ email: pendingUser.email });
+    await db.collection('influencers').doc(uid).set({
+      fullName: pendingUser.name, phone: pendingUser.phone, email: pendingUser.email,
+      eligible: false, payoutPercent: 0, totalEarnings: 0,
+      createdAt: new Date().toISOString()
+    });
+    msg.textContent = "Registration successful! Redirecting to login...";
+    msg.className = "msg success";
+    setTimeout(() => window.location.href = "login.html", 1500);
+  } catch(err){
+    msg.textContent = "Error: " + err.message; msg.className = "msg error";
+    btn.disabled = false; btn.textContent = "Verify & Complete Registration";
+  }
+});
+</script>
+</body></html>
